@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { Thought } from "./models/ThoughtModel";
+import expressListEndpoints from "express-list-endpoints";
 
 dotenv.config();
 
@@ -20,30 +21,33 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Start defining your routes here
+// Define the routes
 app.get("/", (req, res) => {
-  res.json(expressListEndpoints(app));
+  res.json(expressListEndpoints(app)); // Sends a JSON response with all routes
 });
 
+// Define a route to fetch thoughts
 app.get("/thoughts", async (req, res) => {
+  // Use the Thought model to get all thoughts from the database
   const thoughts = await Thought.find()
-    .sort({ createdAt: "desc" })
-    .limit(20)
-    .exec();
+    .sort({ createdAt: "desc" }) // Sort them by creation date (descending order)
+    .limit(20) // Limit the results to 20 thoughts
+    .exec(); // Execute the query
   res.json(thoughts);
 });
 
+// Define a route to post (create) a new thought
 app.post("/thoughts", async (req, res) => {
-  //Retrieve info that is sent by the user to our API endpoint
-  // I use {} around message to make sure ONLY message can be sent in by the user, not hearts and createdAt.
+  // Extract only the "message" field from the request body (not hearts and createdAt)
   const { message } = req.body;
-  // Use our mongoose model to create the database entry
+
+  // Create a new thought using the Thought model
   const thought = new Thought({ message });
 
   try {
-    // Success
+    // Try to save the new thought to the database
     const savedThought = await thought.save();
-    res.status(201).json(savedThought);
+    res.status(201).json(savedThought); // Send the saved thought as a response
   } catch (err) {
     res.status(400).json({
       message: "Could not save thought to database",
@@ -52,23 +56,23 @@ app.post("/thoughts", async (req, res) => {
   }
 });
 
+// Define a route to "like" a thought
 app.post("/thoughts/:thoughtId/like", async (req, res) => {
-  // Get thoughtId from URL-param
-  // Could also do like this: const thoughtId = req.params.thoughtId;
+  // Extract the thought ID from the URL parameter
   const { thoughtId } = req.params;
 
   try {
-    // Find a thought with right ID and increase hearts by 1
+    // Find the thought by ID and increment the "hearts" by 1
     const updatedThought = await Thought.findByIdAndUpdate(
-      thoughtId, // Find thought based on ID
+      thoughtId,
       { $inc: { hearts: 1 } }, // Increments hearts with 1
       { new: true } // Return the updated thought
     );
 
     if (updatedThought) {
-      res.status(200).json(updatedThought); // Send back the updated thought
+      res.status(200).json(updatedThought); //Send the updated thought as a response
     } else {
-      res.status(404).json({ message: "Thought not found" }); // If no thought found
+      res.status(404).json({ message: "Thought not found" }); // If no thought was found, send a 404 response
     }
   } catch (err) {
     res

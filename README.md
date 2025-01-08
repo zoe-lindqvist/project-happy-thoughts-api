@@ -1,13 +1,18 @@
 # Project Happy Thoughts API
 
-Replace this readme with your own information about your project.
-
-Start by briefly describing the assignment in a sentence or two. Keep it short and to the point.
+This project focused on building a custom API enabling users to post "happy thoughts," like posts, and view the 20 most recent thoughts. The API was built to replace the original Technigo-provided API, ensuring compatibility with the existing frontend while enhancing functionality and data validation.
 
 ## The problem
 
-Describe how you approached to problem, and what tools and techniques you used to solve it. How did you plan? What technologies did you use? If you had more time, what would be next?
+To address the project requirements, I created a MongoDB database using Mongoose for data management. I built endpoints to fetch, create, and update thoughts while validating user input and ensuring clean data storage.
+
+## Technologies used
+
+- Express.js
+- MongoDB
+- Mongoose
 
 ## View it live
 
-Every project should be deployed somewhere. Be sure to include the link to the deployed project so that the viewer can click around and see what it's all about.
+Frontend : https://happythoughts-api.netlify.app/
+Backend : https://project-happy-thoughts-api-2wfi.onrender.com
