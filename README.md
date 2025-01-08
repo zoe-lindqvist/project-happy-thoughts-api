@@ -14,5 +14,5 @@ To address the project requirements, I created a MongoDB database using Mongoose
 
 ## View it live
 
-Frontend : https://happythoughts-api.netlify.app/
-Backend : https://project-happy-thoughts-api-2wfi.onrender.com
+- Frontend : https://happythoughts-api.netlify.app/
+- Backend : https://project-happy-thoughts-api-2wfi.onrender.com
