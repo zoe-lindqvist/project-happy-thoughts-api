@@ -20,83 +20,60 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Start defining route endpoint here
+// Start defining your routes here
 app.get("/", (req, res) => {
-  res.json({
-    endpoints: {
-      fetchThoughts: "GET /thoughts",
-      postThought: "POST /thoughts",
-      likeThought: "PATCH /thoughts/:thoughtId/like",
-    },
-  });
+  res.json(expressListEndpoints(app));
 });
 
-// Fetch the 20 latest thoughts in desc order
 app.get("/thoughts", async (req, res) => {
-  try {
-    const thoughts = await Thought.find().sort({ createdAt: -1 }).limit(20);
-    res.json(thoughts);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching thoughts" });
-  }
+  const thoughts = await Thought.find()
+    .sort({ createdAt: "desc" })
+    .limit(20)
+    .exec();
+  res.json(thoughts);
 });
 
-// Post a new thought/message
 app.post("/thoughts", async (req, res) => {
+  //Retrieve info that is sent by the user to our API endpoint
+  // I use {} around message to make sure ONLY message can be sent in by the user, not hearts and createdAt.
   const { message } = req.body;
+  // Use our mongoose model to create the database entry
+  const thought = new Thought({ message });
 
   try {
-    // Validation of characters
-    if (!message || message.length < 5 || message.length > 140) {
-      throw new Error("Message must be between 5 and 140 characters");
-    }
-
-    // Create and save a new thought/message
-    const newThought = await new Thought({ message }).save();
-
-    res.status(201).json({
-      success: true,
-      response: newThought,
-      message: "Thought was successfully created!",
-    });
-  } catch (error) {
+    // Success
+    const savedThought = await thought.save();
+    res.status(201).json(savedThought);
+  } catch (err) {
     res.status(400).json({
-      success: false,
-      response: error.message,
-      message: "Failed to post thought",
+      message: "Could not save thought to database",
+      error: err.errors,
     });
   }
 });
 
-// Increase the hearts count
-app.patch("/thoughts/:thoughtId/like", async (req, res) => {
+app.post("/thoughts/:thoughtId/like", async (req, res) => {
+  // Get thoughtId from URL-param
+  // Could also do like this: const thoughtId = req.params.thoughtId;
   const { thoughtId } = req.params;
 
   try {
-    // Find thought by ID
+    // Find a thought with right ID and increase hearts by 1
     const updatedThought = await Thought.findByIdAndUpdate(
-      thoughtId,
-      { $inc: { hearts: 1 } }, // Increment the hearts field by 1
-      { new: true }
+      thoughtId, // Find thought based on ID
+      { $inc: { hearts: 1 } }, // Increments hearts with 1
+      { new: true } // Return the updated thought
     );
 
-    // If no thought is found, throw an error
-    if (!updatedThought) {
-      throw new Error("Thought not found");
+    if (updatedThought) {
+      res.status(200).json(updatedThought); // Send back the updated thought
+    } else {
+      res.status(404).json({ message: "Thought not found" }); // If no thought found
     }
-
-    // Send a success response with the updated thought
-    res.status(200).json({
-      success: true,
-      response: updatedThought,
-      message: "Successfully liked the thought!",
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      response: error.message,
-      message: "Failed to like thought",
-    });
+  } catch (err) {
+    res
+      .status(400)
+      .json({ message: "Could not update hearts", error: err.message });
   }
 });
 
